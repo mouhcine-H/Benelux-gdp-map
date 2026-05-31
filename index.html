@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Benelux Map</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <style>
+    body { margin: 0; }
+    #map { width: 100vw; height: 100vh; }
+
+    .legend {
+      background: white;
+      padding: 10px 14px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      line-height: 24px;
+    }
+    .legend h4 {
+      margin: 0 0 6px 0;
+      font-size: 13px;
+    }
+    .legend span {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script>
+
+    const map = L.map('map').setView([50.85, 4.9], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    const gdpData = {
+      "Luxembourg":  128820,
+      "Netherlands": 63754,
+      "Belgium":     51768
+    };
+
+    function getColor(gdp) {
+      if (gdp > 100000) return '#1a6b3c';
+      if (gdp > 60000)  return '#52a86b';
+      return '#a8d5b5';
+    }
+
+    const benelux = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": { "name": "Luxembourg" },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[6.1173,50.1205],[6.5182,50.1759],[6.5323,49.8072],[6.3690,49.4598],[5.8981,49.4425],[5.6741,49.5292],[5.7823,50.0903],[6.1173,50.1205]]]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": { "name": "Belgium" },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[2.5488,51.0963],[3.3148,51.3459],[4.2273,51.3876],[4.9823,51.4750],[5.8063,51.1648],[6.1573,50.8035],[6.2423,50.5706],[6.1173,50.1205],[5.7823,50.0903],[5.6741,49.5292],[4.8996,49.7882],[4.1318,49.9746],[3.4148,50.0765],[2.8878,50.2863],[2.5488,51.0963]]]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": { "name": "Netherlands" },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [[[3.3148,51.3459],[4.2273,51.3876],[4.9823,51.4750],[5.8063,51.1648],[6.1573,50.8035],[6.8723,51.0495],[7.0648,52.3752],[6.6773,53.0305],[5.9348,53.4050],[4.7073,53.0913],[4.2898,52.6736],[3.7248,51.7565],[3.3148,51.3459]]]
+          }
+        }
+      ]
+    };
+
+    L.geoJSON(benelux, {
+      style: function(feature) {
+        const gdp = gdpData[feature.properties.name];
+        return {
+          fillColor: getColor(gdp),
+          fillOpacity: 0.8,
+          color: 'white',
+          weight: 2
+        };
+      },
+      onEachFeature: function(feature, layer) {
+        const name = feature.properties.name;
+        const gdp = gdpData[name];
+        layer.bindTooltip(
+          '<b>' + name + '</b><br>GDP: $' + gdp.toLocaleString() + ' / person',
+          { sticky: true }
+        );
+      }
+    }).addTo(map);
+
+    // Legend
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function() {
+      const div = L.DomUtil.create('div', 'legend');
+      div.innerHTML = `
+        <h4>GDP per Capita (USD)</h4>
+        <span style="background:#1a6b3c"></span> &gt; $100,000<br>
+        <span style="background:#52a86b"></span> $60,000 – $100,000<br>
+        <span style="background:#a8d5b5"></span> &lt; $60,000<br>
+        <br><small>Source: World Bank 2023</small>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+
+  </script>
+</body>
+</html>
